@@ -49,7 +49,7 @@ Translify/
 ### 1. Clone the Repository
 
 ```bash
-git clone http://127.0.0.1:5500/index.html
+git clone http://127.0.0.1:5501/index.html
 ```
 
 ### 2. Open the Project Folder
