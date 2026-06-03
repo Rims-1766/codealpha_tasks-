@@ -112,22 +112,6 @@ Open `index.html` in your browser.
 
 ---
 
-## 📸 Screenshots
-
-### Home Page
-
-*Add a screenshot here*
-
-### AI Chat Assistant
-
-*Add a screenshot here*
-
-### Budget Estimator
-
-*Add a screenshot here*
-
----
-
 ## 🔮 Future Enhancements
 
 * Real-time weather information
