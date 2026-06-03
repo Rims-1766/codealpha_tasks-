@@ -1,0 +1,843 @@
+html
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TravelEase – AI Travel Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1a6fd4;--blue-dark:#0d4fa0;--blue-light:#e8f1fc;--blue-mid:#378add;
+  --accent:#ff6b35;--accent-light:#fff0eb;
+  --bg:#f0f4fb;--sidebar-bg:#ffffff;--chat-bg:#f7f9ff;
+  --card-bg:#ffffff;--border:#dde5f5;
+  --text:#1a2340;--text-muted:#6b7a9e;--text-light:#a0aec0;
+  --bot-bubble:#ffffff;--user-bubble:linear-gradient(135deg,#1a6fd4,#0d4fa0);
+  --shadow:0 2px 12px rgba(26,111,212,0.1);--shadow-card:0 4px 20px rgba(26,111,212,0.12);
+  --radius:12px;--radius-lg:18px;--radius-xl:24px;
+}
+html,body{height:100%;font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text)}
+
+/* ── LAYOUT ── */
+#app{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+#sidebar{
+  width:260px;min-width:260px;background:var(--sidebar-bg);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  box-shadow:2px 0 12px rgba(26,111,212,0.06);z-index:10;transition:transform .3s
+}
+.sidebar-header{
+  padding:20px 20px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px
+}
+.logo-wrap{
+  width:38px;height:38px;background:var(--blue);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;
+  box-shadow:0 3px 10px rgba(26,111,212,0.35);flex-shrink:0
+}
+.logo-text{font-size:18px;font-weight:700;color:var(--blue);letter-spacing:-.3px}
+.logo-text span{color:var(--accent)}
+
+.sb-section-label{
+  padding:14px 18px 6px;font-size:10px;font-weight:600;letter-spacing:.8px;
+  color:var(--text-light);text-transform:uppercase
+}
+.sb-nav{flex:1;overflow-y:auto;padding-bottom:16px}
+.sb-nav::-webkit-scrollbar{width:3px}
+.sb-nav::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.sb-item{
+  display:flex;align-items:center;gap:10px;padding:10px 18px;
+  cursor:pointer;font-size:13.5px;font-weight:500;color:var(--text-muted);
+  border-radius:10px;margin:1px 10px;transition:all .18s
+}
+.sb-item i{width:20px;text-align:center;font-size:14px;transition:color .18s}
+.sb-item:hover{background:var(--blue-light);color:var(--blue)}
+.sb-item.active{background:var(--blue-light);color:var(--blue);font-weight:600}
+.sb-item.active i{color:var(--blue)}
+
+.sb-footer{padding:16px 18px;border-top:1px solid var(--border)}
+.sb-clear-btn{
+  width:100%;padding:9px;background:transparent;border:1.5px solid var(--border);
+  border-radius:10px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:500;
+  color:var(--text-muted);cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:7px
+}
+.sb-clear-btn:hover{border-color:#e74c3c;color:#e74c3c;background:#fff5f5}
+
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+
+#header{
+  padding:14px 24px;background:#fff;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 2px 8px rgba(26,111,212,0.06);z-index:5;flex-shrink:0
+}
+.header-left{display:flex;align-items:center;gap:12px}
+.header-bot-icon{
+  width:36px;height:36px;background:var(--blue);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;
+  position:relative
+}
+.header-bot-icon::after{
+  content:'';position:absolute;bottom:1px;right:1px;
+  width:9px;height:9px;background:#2ecc71;border:2px solid #fff;border-radius:50%
+}
+.header-title{font-size:15px;font-weight:600;color:var(--text)}
+.header-sub{font-size:12px;color:var(--text-muted)}
+.hamburger{display:none;background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted);padding:4px}
+
+/* ── MESSAGES ── */
+#messages{
+  flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:16px;
+  background:var(--chat-bg);scroll-behavior:smooth
+}
+#messages::-webkit-scrollbar{width:4px}
+#messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+.msg-row{display:flex;gap:10px;max-width:100%;animation:msgIn .3s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg-row.user{flex-direction:row-reverse;align-self:flex-end;max-width:75%}
+.msg-row.bot{align-self:flex-start;max-width:82%}
+
+.avatar{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:2px
+}
+.bot-av{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(26,111,212,0.3)}
+.user-av{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(255,107,53,0.3)}
+
+.bubble-wrap{display:flex;flex-direction:column;gap:4px;min-width:0}
+.bubble{
+  padding:12px 16px;border-radius:var(--radius-lg);font-size:14px;line-height:1.6;
+  word-break:break-word;position:relative
+}
+.bot .bubble{
+  background:var(--bot-bubble);color:var(--text);
+  border:1px solid var(--border);border-bottom-left-radius:4px;
+  box-shadow:var(--shadow)
+}
+.user .bubble{
+  background:var(--user-bubble);color:#fff;
+  border-bottom-right-radius:4px
+}
+.ts{font-size:11px;color:var(--text-light)}
+.msg-row.user .ts{text-align:right}
+
+/* ── CARDS INSIDE BUBBLES ── */
+.section-title{
+  font-size:13px;font-weight:600;color:var(--blue);margin-bottom:10px;
+  display:flex;align-items:center;gap:6px
+}
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.mini-card{
+  background:var(--blue-light);border:1px solid #c8dcf7;border-radius:var(--radius);
+  padding:10px 12px
+}
+.mc-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px}
+.mc-sub{font-size:12px;color:var(--text-muted)}
+.mc-price-low{color:#27ae60;font-weight:600;font-size:13px}
+.mc-price-mid{color:#e67e22;font-weight:600;font-size:13px}
+.mc-price-lux{color:#e74c3c;font-weight:600;font-size:13px}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:500;margin:2px 3px 2px 0}
+.badge-blue{background:var(--blue-light);color:var(--blue-dark)}
+.badge-green{background:#e8f8f0;color:#1a7a45}
+.badge-amber{background:#fff4e6;color:#9a5f00}
+.badge-red{background:#fdecea;color:#b71c1c}
+
+.bullet-list{list-style:none;padding:0;margin-top:6px}
+.bullet-list li{
+  font-size:13.5px;padding:5px 0;color:var(--text);
+  display:flex;align-items:flex-start;gap:8px;border-bottom:1px solid #f0f4fb
+}
+.bullet-list li:last-child{border-bottom:none}
+.bullet-list li::before{
+  content:'';width:6px;height:6px;background:var(--blue);border-radius:50%;
+  flex-shrink:0;margin-top:7px
+}
+.ol-list{padding-left:18px;font-size:13.5px;line-height:2;color:var(--text)}
+.ol-list li{padding:2px 0}
+
+.alert-card{
+  background:#fff8e1;border:1px solid #ffe082;border-radius:var(--radius);
+  padding:12px 14px;margin-top:8px
+}
+.alert-title{font-size:13px;font-weight:600;color:#e65100;display:flex;align-items:center;gap:6px;margin-bottom:6px}
+
+.day-grid{display:grid;grid-template-columns:1fr;gap:6px;margin-top:8px}
+.day-card{
+  background:var(--blue-light);border-left:3px solid var(--blue);
+  border-radius:0 var(--radius) var(--radius) 0;padding:9px 12px
+}
+.day-label{font-size:11px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.5px}
+.day-detail{font-size:13px;color:var(--text);margin-top:2px}
+
+.quiz-card{background:#fff;border:1.5px solid var(--blue);border-radius:var(--radius-lg);padding:14px 16px;margin-top:8px}
+.quiz-q{font-size:13.5px;font-weight:600;color:var(--text);margin-bottom:10px}
+.quiz-opts{display:flex;flex-wrap:wrap;gap:7px}
+.quiz-opt{
+  padding:6px 14px;border:1.5px solid var(--border);border-radius:20px;
+  font-size:12.5px;cursor:pointer;color:var(--text-muted);transition:all .18s;
+  font-family:'Poppins',sans-serif;background:#fff
+}
+.quiz-opt:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+.quiz-opt.selected{border-color:var(--blue);color:#fff;background:var(--blue)}
+
+.dest-result-card{
+  background:linear-gradient(135deg,var(--blue),var(--blue-dark));
+  border-radius:var(--radius-lg);padding:16px 18px;color:#fff;margin-top:8px;text-align:center
+}
+.dest-name{font-size:22px;font-weight:700;letter-spacing:1px}
+.dest-reason{font-size:13px;opacity:.88;margin-top:6px;line-height:1.55}
+
+/* ── TYPING ── */
+.typing-dots{display:flex;gap:4px;align-items:center;padding:2px 0}
+.typing-dots span{
+  width:7px;height:7px;background:var(--blue);border-radius:50%;
+  animation:td 1.2s infinite;opacity:.5
+}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+
+/* ── CHIPS ── */
+#chips-wrap{
+  padding:10px 16px;background:#fff;border-top:1px solid var(--border);
+  display:flex;flex-wrap:nowrap;gap:7px;overflow-x:auto;flex-shrink:0
+}
+#chips-wrap::-webkit-scrollbar{height:2px}
+#chips-wrap::-webkit-scrollbar-thumb{background:var(--border)}
+.chip{
+  white-space:nowrap;padding:6px 14px;background:var(--blue-light);
+  border:1.5px solid #b8d4f5;border-radius:20px;font-size:12.5px;font-weight:500;
+  cursor:pointer;color:var(--blue-dark);transition:all .18s;font-family:'Poppins',sans-serif;flex-shrink:0
+}
+.chip:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ── INPUT ROW ── */
+#input-row{
+  padding:12px 16px;background:#fff;border-top:1px solid var(--border);
+  display:flex;gap:10px;align-items:center;flex-shrink:0
+}
+#inp{
+  flex:1;padding:11px 16px;border-radius:25px;border:1.5px solid var(--border);
+  background:var(--bg);font-family:'Poppins',sans-serif;font-size:14px;
+  color:var(--text);outline:none;transition:border .18s
+}
+#inp:focus{border-color:var(--blue);background:#fff}
+#inp::placeholder{color:var(--text-light)}
+#send-btn{
+  width:42px;height:42px;background:var(--blue);border:none;border-radius:50%;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:16px;transition:all .18s;flex-shrink:0;
+  box-shadow:0 3px 10px rgba(26,111,212,0.35)
+}
+#send-btn:hover{background:var(--blue-dark);transform:scale(1.06)}
+#send-btn:active{transform:scale(.96)}
+
+/* ── WELCOME ── */
+.welcome-banner{
+  background:linear-gradient(135deg,#1a6fd4 0%,#0d4fa0 60%,#0a3880 100%);
+  border-radius:var(--radius-xl);padding:24px;color:#fff;margin-bottom:4px;
+  position:relative;overflow:hidden
+}
+.welcome-banner::before{
+  content:'✈️';position:absolute;right:-10px;top:-10px;font-size:90px;opacity:.07;
+  transform:rotate(30deg)
+}
+.welcome-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.welcome-sub{font-size:13px;opacity:.85;line-height:1.6}
+.quick-btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.quick-btn{
+  padding:6px 14px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);
+  border-radius:20px;font-size:12px;color:#fff;cursor:pointer;
+  font-family:'Poppins',sans-serif;transition:all .18s
+}
+.quick-btn:hover{background:rgba(255,255,255,0.28)}
+
+/* ── OVERLAY (mobile sidebar) ── */
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #sidebar{position:fixed;left:0;top:0;bottom:0;z-index:20;transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #overlay{display:block}
+  #overlay.hidden{display:none}
+  .hamburger{display:block}
+  .msg-row.bot{max-width:92%}
+  .msg-row.user{max-width:88%}
+  .card-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="overlay" class="hidden" onclick="closeSidebar()"></div>
+
+<div id="app">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo-wrap"><i class="fas fa-plane"></i></div>
+      <div class="logo-text">Travel<span>Ease</span></div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-section-label">Explore</div>
+      <div class="sb-item active" onclick="sbClick(this,'Tell me about Goa')"><i class="fas fa-map-marked-alt"></i>Destination Guide</div>
+      <div class="sb-item" onclick="sbClick(this,'Budget for a 3-day Goa trip')"><i class="fas fa-rupee-sign"></i>Budget Planner</div>
+      <div class="sb-item" onclick="sbClick(this,'Top attractions in Manali')"><i class="fas fa-binoculars"></i>Attractions Finder</div>
+      <div class="sb-item" onclick="sbClick(this,'Plan a 4-day trip to Goa')"><i class="fas fa-route"></i>Trip Planner</div>
+      <div class="sb-section-label">Guides</div>
+      <div class="sb-item" onclick="sbClick(this,'Hotels in Jaipur')"><i class="fas fa-hotel"></i>Hotel Guide</div>
+      <div class="sb-item" onclick="sbClick(this,'Famous food in Hyderabad')"><i class="fas fa-utensils"></i>Food Guide</div>
+      <div class="sb-item" onclick="sbClick(this,'What should I pack for Manali in winter?')"><i class="fas fa-backpack"></i>Packing Assistant</div>
+      <div class="sb-section-label">Help</div>
+      <div class="sb-item" onclick="sbClick(this,'What if I lose my passport?')"><i class="fas fa-exclamation-triangle"></i>Emergency Tips</div>
+      <div class="sb-item" onclick="sbClick(this,'Do Indians need visa for Thailand?')"><i class="fas fa-passport"></i>Visa Information</div>
+      <div class="sb-item" onclick="startQuiz()"><i class="fas fa-brain"></i>Travel Quiz</div>
+    </div>
+    <div class="sb-footer">
+      <button class="sb-clear-btn" onclick="clearChat()"><i class="fas fa-trash-alt"></i> Clear Chat</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+    <!-- HEADER -->
+    <div id="header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="hamburger" onclick="openSidebar()"><i class="fas fa-bars"></i></button>
+        <div class="header-left">
+          <div class="header-bot-icon"><i class="fas fa-plane"></i></div>
+          <div>
+            <div class="header-title">TravelEase Assistant</div>
+            <div class="header-sub">Your AI travel companion</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#2ecc71;font-weight:500">
+        <span style="width:7px;height:7px;background:#2ecc71;border-radius:50%;display:inline-block"></span>Online
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div id="messages"></div>
+
+    <!-- CHIPS -->
+    <div id="chips-wrap">
+      <div class="chip" onclick="sendChip('Tell me about Goa')">🏖️ Tell me about Goa</div>
+      <div class="chip" onclick="sendChip('Budget for Goa trip')">💰 Goa Budget</div>
+      <div class="chip" onclick="sendChip('Top attractions in Manali')">🏔️ Manali Attractions</div>
+      <div class="chip" onclick="sendChip('When should I visit Kashmir?')">🌸 Best time – Kashmir</div>
+      <div class="chip" onclick="sendChip('Famous food in Hyderabad')">🍛 Hyderabad Food</div>
+      <div class="chip" onclick="sendChip('Plan a 4-day trip to Goa')">🗓️ Plan Goa Trip</div>
+      <div class="chip" onclick="sendChip('Best beach destinations in India')">🌊 Beach Destinations</div>
+      <div class="chip" onclick="sendChip('Snowy places in India')">❄️ Snow Destinations</div>
+    </div>
+
+    <!-- INPUT -->
+    <div id="input-row">
+      <input id="inp" type="text" placeholder="Ask me anything about travel in India…" autocomplete="off"/>
+      <button id="send-btn" onclick="handleSend()" title="Send"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── KNOWLEDGE BASE ─── */
+const DB = {
+  goa:{
+    emoji:'🏖️',
+    overview:"Goa is India's smallest state and its most popular beach destination. Blessed with golden sands, turquoise waters, and Portuguese colonial heritage, it offers a unique mix of relaxation and nightlife.",
+    best_time:"October – March",weather:"Warm & sunny (Oct–Mar). Monsoon (Jun–Sep) sees heavy rains.",
+    beaches:["Baga","Calangute","Palolem","Anjuna","Arambol","Vagator"],
+    food:["Fish Curry Rice","Prawn Balchão","Goan Chorizo","Bebinca","Feni","Xacuti"],
+    nearby:["Hampi (5 hrs)","Gokarna (3 hrs)","Pondicherry (8 hrs)","Mumbai (9 hrs)"],
+    budget:{low:"₹8,000–₹15,000",mid:"₹15,000–₹30,000",lux:"₹30,000+"},
+    transport:{air:"Dabolim / Mopa Airport — flights from all major cities",train:"Madgaon & Thivim stations on Konkan Railway",road:"NH-66 connects Goa to Mumbai & Mangalore. Buses available from Pune, Mumbai, Bengaluru"},
+    hotels:{budget:["Zostel Goa (Palolem)","Jungle Inn","Agonda Beach Resort"],mid:["The Leela Cottages","Alila Diwa","Park Inn by Radisson"],lux:["Taj Exotica","The Leela Goa","Grand Hyatt Goa"]}
+  },
+  manali:{
+    emoji:'🏔️',
+    overview:"Manali is a high-altitude Himalayan resort in Himachal Pradesh, popular for adventure sports, snow-capped peaks, and verdant valleys along the Beas River.",
+    best_time:"October–June (avoid monsoon Jul–Sep)",weather:"Cold winters (−15°C), pleasant summers (15–25°C)",
+    attractions:["Solang Valley – snow & skiing","Rohtang Pass – scenic high-altitude pass","Hadimba Temple – ancient wood temple","Mall Road – shopping & cafes","Manu Temple","Jogini Waterfall","Beas Kund Trek"],
+    food:["Siddu (local bread)","Dham (festive meal)","Trout Fish","Babru","Aktori"],
+    nearby:["Kasol (80 km)","Kaza (202 km)","Dharamshala (248 km)","Shimla (270 km)"],
+    budget:{low:"₹5,000–₹10,000",mid:"₹10,000–₹22,000",lux:"₹22,000+"},
+    transport:{air:"Bhuntar Airport (50 km) – limited flights",train:"Chandigarh (310 km) or Kalka station, then bus/taxi",road:"Volvo buses from Delhi (14 hrs) via NH-3; drive via Shimla or Mandi"}
+  },
+  kashmir:{
+    emoji:'🌷',
+    overview:"Often called 'Paradise on Earth', Kashmir enchants with its shikara-dotted Dal Lake, Mughal gardens, saffron fields, and dramatic Himalayan scenery.",
+    best_time:"March–October for sightseeing; December–February for snow",weather:"Spring (10–20°C), Summer (25°C), Autumn (5–20°C), Winter (−10°C)",
+    attractions:["Dal Lake & Shikara ride","Gulmarg (ski resort)","Pahalgam (valley & trekking)","Sonamarg","Mughal Gardens (Shalimar Bagh)","Betaab Valley"],
+    food:["Wazwan feast","Rogan Josh","Yakhni","Kahwa tea","Kashmiri Pulao","Phirni"],
+    seasons:[{name:"Spring",months:"Mar–May",desc:"Tulip bloom, mild weather, Mughal Gardens"},{name:"Summer",months:"Jun–Aug",desc:"Trekking, Pahalgam, Betaab Valley"},{name:"Autumn",months:"Sep–Nov",desc:"Chinar gold, Saffron harvest in Pampore"},{name:"Winter",months:"Dec–Feb",desc:"Skiing at Gulmarg, snowfall in Srinagar"}]
+  },
+  jaipur:{
+    emoji:'🏰',
+    overview:"The Pink City of Rajasthan dazzles visitors with its magnificent Rajput palaces, mighty forts, vibrant bazaars, and warm desert hospitality.",
+    best_time:"October–March",weather:"Hot summers (45°C), cool winters (5–25°C)",
+    attractions:["Amber Fort","Hawa Mahal","City Palace","Jantar Mantar (UNESCO)","Nahargarh Fort","Birla Temple","Johari Bazaar"],
+    food:["Dal Baati Churma","Ghewar","Laal Maas","Kachori","Mawa Kachori","Lassi"],
+    nearby:["Pushkar (150 km)","Ajmer (135 km)","Ranthambore Tiger Reserve (180 km)","Udaipur (395 km)","Sariska (107 km)"]
+  },
+  hyderabad:{
+    emoji:'🍛',
+    overview:"City of Pearls and Nizams — Hyderabad blends a rich Deccan heritage with modern IT culture, famous worldwide for its biryani and Charminar.",
+    best_time:"October–March",
+    food:[{name:"Hyderabadi Biryani",desc:"Aromatic long-grain rice with spiced meat, slow-cooked (dum style)"},{name:"Haleem",desc:"Slow-cooked meat & lentil stew, especially popular during Ramadan"},{name:"Double Ka Meetha",desc:"Bread pudding soaked in saffron milk & rabri"},{name:"Qubani Ka Meetha",desc:"Sweet apricot dessert with cream"},{name:"Irani Chai",desc:"Strong tea served in traditional Irani cafes"},{name:"Lukhmi",desc:"Savoury fried pastry filled with minced meat"}],
+    attractions:["Charminar","Golconda Fort","Ramoji Film City","Hussain Sagar Lake","Birla Mandir","Chowmahalla Palace"]
+  },
+  shimla:{
+    emoji:'⛰️',
+    overview:"India's former summer capital offers colonial architecture, toy train rides, pine forests, and panoramic Himalayan views.",
+    best_time:"March–June & October–November",
+    attractions:["The Ridge","Mall Road","Jakhu Temple","Kufri","Christ Church","Viceregal Lodge","Chadwick Falls"]
+  },
+  udaipur:{
+    emoji:'🏛️',
+    overview:"The City of Lakes — Udaipur's shimmering palaces, romantic lake views, and royal heritage make it one of India's most beautiful cities.",
+    best_time:"September–March",
+    attractions:["City Palace","Lake Pichola","Udai Sagar","Jag Mandir","Fateh Sagar","Saheliyon Ki Bari","Monsoon Palace"]
+  },
+  andaman:{
+    emoji:'🌊',
+    overview:"The Andaman Islands offer pristine coral reefs, crystal-clear waters, and untouched tropical beaches far from the mainland.",
+    best_time:"October–May",
+    attractions:["Radhanagar Beach (Havelock)","Neil Island","Cellular Jail","Elephant Beach","Barren Island Volcano","Scuba diving at North Bay"]
+  }
+};
+
+const VISA = {
+  thailand:{required:false,note:"Indians get Visa on Arrival (30 days) or e-Visa",docs:["Valid passport (6 months validity)","Return ticket","Proof of accommodation","USD 10,000 equivalent in cash"],time:"Visa on Arrival – instant; e-Visa – 3–5 working days"},
+  dubai:{required:true,note:"Indians need a pre-approved visa",docs:["Passport copy","Photographs","Bank statement","Return ticket","Employer letter"],time:"3–5 working days; express in 24 hrs"},
+  singapore:{required:true,note:"Indians must obtain a Singapore Tourist Visa",docs:["Passport","Photo","Bank statement","Travel itinerary","Hotel booking"],time:"3–5 working days"},
+  usa:{required:true,note:"B1/B2 Tourist Visa required. Wait times are high.",docs:["DS-160 form","Appointment","Bank statements","Ties to India","Photo"],time:"Varies – interview required; can take months"},
+  europe:{required:true,note:"Schengen Visa required for most European countries",docs:["Passport","Travel insurance","Accommodation proof","Bank statements","Itinerary"],time:"15 working days"}
+};
+
+/* ─── QUIZ STATE ─── */
+let quizState = null;
+const quizFlow = [
+  {q:"What's your budget for the trip?",opts:["Low (under ₹10K)","Medium (₹10K–₹30K)","Luxury (₹30K+)"],key:"budget"},
+  {q:"What type of destination do you prefer?",opts:["Mountains","Beaches","Heritage / Culture","Wildlife"],key:"type"},
+  {q:"How many days do you have?",opts:["Weekend (2–3 days)","Short (4–5 days)","Week+ (7+ days)"],key:"days"},
+  {q:"What kind of trip is this?",opts:["Adventure","Relaxation","Romantic","Family"],key:"mood"}
+];
+
+/* ─── TIME HELPER ─── */
+function now(){const d=new Date();const h=d.getHours();const m=String(d.getMinutes()).padStart(2,'0');return (h>12?h-12:h||12)+':'+m+' '+(h>=12?'PM':'AM')}
+
+/* ─── MESSAGE HELPERS ─── */
+function addMsg(html,isUser=false){
+  const row=document.createElement('div');
+  row.className='msg-row '+(isUser?'user':'bot');
+  const av=document.createElement('div');
+  av.className='avatar '+(isUser?'user-av':'bot-av');
+  av.innerHTML=isUser?'<i class="fas fa-user"></i>':'<i class="fas fa-plane"></i>';
+  const bw=document.createElement('div');
+  bw.className='bubble-wrap';
+  const b=document.createElement('div');
+  b.className='bubble';b.innerHTML=html;
+  const ts=document.createElement('div');
+  ts.className='ts';ts.textContent=now();
+  bw.appendChild(b);bw.appendChild(ts);
+  row.appendChild(av);row.appendChild(bw);
+  document.getElementById('messages').appendChild(row);
+  document.getElementById('messages').scrollTop=99999;
+}
+
+function showTyping(){
+  const row=document.createElement('div');
+  row.className='msg-row bot';row.id='typing-ind';
+  row.innerHTML='<div class="avatar bot-av"><i class="fas fa-plane"></i></div><div class="bubble-wrap"><div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>';
+  document.getElementById('messages').appendChild(row);
+  document.getElementById('messages').scrollTop=99999;
+}
+function removeTyping(){const e=document.getElementById('typing-ind');if(e)e.remove();}
+
+/* ─── REPLY LOGIC ─── */
+function getReply(raw){
+  const q=raw.toLowerCase();
+
+  /* VISA */
+  if(q.includes('visa')){
+    for(const[country,info] of Object.entries(VISA)){
+      if(q.includes(country)){
+        return `<div class="section-title"><i class="fas fa-passport"></i> Visa Info – ${country.charAt(0).toUpperCase()+country.slice(1)}</div>
+        <div class="mini-card" style="margin-bottom:8px">
+          <div class="mc-title">${info.required?'✅ Visa Required':'🟢 Visa on Arrival / Free'}</div>
+          <div class="mc-sub">${info.note}</div>
+        </div>
+        <div class="section-title" style="font-size:12px;margin-top:10px">Documents Needed</div>
+        <ul class="bullet-list">${info.docs.map(d=>`<li>${d}</li>`).join('')}</ul>
+        <div class="badge badge-amber" style="margin-top:8px"><i class="fas fa-clock"></i> Processing: ${info.time}</div>`;
+      }
+    }
+    return `<div class="section-title"><i class="fas fa-passport"></i> Visa Information</div>I can help with visa info for Thailand, Dubai, Singapore, USA, and Europe. Try: <em>"Do Indians need visa for Thailand?"</em>`;
+  }
+
+  /* BUDGET */
+  const isBudget=q.includes('budget')||q.includes('cost')||q.includes('cheap')||q.includes('expensive')||q.includes('price')||q.includes('spend');
+  if(isBudget){
+    const dest=detectDest(q);
+    const d=dest?DB[dest]:DB.goa;
+    const name=dest?dest.charAt(0).toUpperCase()+dest.slice(1):'Goa';
+    const b=d.budget||{low:'₹6K–₹12K',mid:'₹12K–₹25K',lux:'₹25K+'};
+    return `<div class="section-title"><i class="fas fa-rupee-sign"></i> Budget Guide – ${d.emoji||''} ${name}</div>
+    <div class="card-grid">
+      <div class="mini-card"><div class="mc-title">🎒 Budget Trip</div><div class="mc-price-low">${b.low}</div><div class="mc-sub">Hostels, street food, local transport</div></div>
+      <div class="mini-card"><div class="mc-title">🏨 Mid-Range</div><div class="mc-price-mid">${b.mid}</div><div class="mc-sub">3-star hotel, restaurants, cabs</div></div>
+      <div class="mini-card"><div class="mc-title">✨ Luxury</div><div class="mc-price-lux">${b.lux}</div><div class="mc-sub">Resorts, fine dining, private transfers</div></div>
+      <div class="mini-card"><div class="mc-title">📋 Includes</div><div class="mc-sub">Stay · Food · Transport · Activities · Sightseeing</div></div>
+    </div>`;
+  }
+
+  /* TRIP PLAN / ITINERARY */
+  if(q.includes('plan')||q.includes('itinerary')||q.includes('day')){
+    if(q.includes('goa')||(!q.includes('manali')&&!q.includes('kashmir')&&!q.includes('jaipur'))){
+      return `<div class="section-title"><i class="fas fa-calendar-alt"></i> 4-Day Goa Itinerary</div>
+      <div class="day-grid">
+        <div class="day-card"><div class="day-label">Day 1</div><div class="day-detail">Arrive → Baga Beach → Sunset at Vagator → Tito's Lane nightlife</div></div>
+        <div class="day-card"><div class="day-label">Day 2</div><div class="day-detail">Fort Aguada → Basilica of Bom Jesus → Old Goa churches → Panjim market</div></div>
+        <div class="day-card"><div class="day-label">Day 3</div><div class="day-detail">Water sports at Calangute → Scuba at Grand Island → Shack dinner at Palolem</div></div>
+        <div class="day-card"><div class="day-label">Day 4</div><div class="day-detail">Mapusa Flea Market → Spice Plantation tour → Local Feni tasting → Depart</div></div>
+      </div>`;
+    }
+    if(q.includes('manali')){
+      return `<div class="section-title"><i class="fas fa-calendar-alt"></i> 4-Day Manali Itinerary</div>
+      <div class="day-grid">
+        <div class="day-card"><div class="day-label">Day 1</div><div class="day-detail">Arrive → Mall Road → Hadimba Temple → Old Manali cafes</div></div>
+        <div class="day-card"><div class="day-label">Day 2</div><div class="day-detail">Solang Valley → Atal Tunnel → Sissu waterfall</div></div>
+        <div class="day-card"><div class="day-label">Day 3</div><div class="day-detail">Rohtang Pass excursion (permit needed) → snow activities</div></div>
+        <div class="day-card"><div class="day-label">Day 4</div><div class="day-detail">Beas Kund trek / Jogini Waterfall → local Siddu breakfast → Depart</div></div>
+      </div>`;
+    }
+  }
+
+  /* HOTEL */
+  if(q.includes('hotel')||q.includes('stay')||q.includes('resort')||q.includes('accommodation')){
+    const dest=detectDest(q)||'goa';
+    const d=DB[dest];
+    const name=dest.charAt(0).toUpperCase()+dest.slice(1);
+    if(d?.hotels){
+      return `<div class="section-title"><i class="fas fa-hotel"></i> Hotels in ${d.emoji} ${name}</div>
+      <div class="card-grid">
+        <div class="mini-card"><div class="mc-title">🎒 Budget</div>${d.hotels.budget.map(h=>`<div class="mc-sub">• ${h}</div>`).join('')}</div>
+        <div class="mini-card"><div class="mc-title">🏨 Mid-Range</div>${d.hotels.mid.map(h=>`<div class="mc-sub">• ${h}</div>`).join('')}</div>
+        <div class="mini-card" style="grid-column:span 2"><div class="mc-title">✨ Luxury</div>${d.hotels.lux.map(h=>`<div class="mc-sub">• ${h}</div>`).join('')}</div>
+      </div>`;
+    }
+    return `<div class="section-title"><i class="fas fa-hotel"></i> Hotels in ${name}</div>You'll find options from budget guesthouses to luxury resorts. For ${name}, mid-range hotels typically cost ₹2,000–₹6,000/night, while luxury can go ₹10,000+. Platforms like MakeMyTrip or Booking.com offer real-time rates and reviews.`;
+  }
+
+  /* TRANSPORT */
+  if(q.includes('reach')||q.includes('how to go')||q.includes('transport')||q.includes('flight')||q.includes('train')||q.includes('bus')){
+    const dest=detectDest(q)||'goa';
+    const d=DB[dest];
+    const name=dest.charAt(0).toUpperCase()+dest.slice(1);
+    if(d?.transport){
+      return `<div class="section-title"><i class="fas fa-route"></i> How to Reach ${d.emoji} ${name}</div>
+      <div class="card-grid">
+        <div class="mini-card"><div class="mc-title">✈️ By Air</div><div class="mc-sub">${d.transport.air}</div></div>
+        <div class="mini-card"><div class="mc-title">🚂 By Train</div><div class="mc-sub">${d.transport.train}</div></div>
+        <div class="mini-card" style="grid-column:span 2"><div class="mc-title">🚌 By Road</div><div class="mc-sub">${d.transport.road}</div></div>
+      </div>`;
+    }
+    return `I can give transport info for Goa and Manali in detail. Which destination are you planning to travel to?`;
+  }
+
+  /* PACKING */
+  if(q.includes('pack')||q.includes('carry')||q.includes('bring')){
+    const isWinter=q.includes('winter')||q.includes('cold')||q.includes('snow');
+    const isBeach=q.includes('beach')||q.includes('goa');
+    if(isWinter||q.includes('manali')||q.includes('kashmir')){
+      return `<div class="section-title"><i class="fas fa-backpack"></i> Packing List – Winter / Mountains</div>
+      <ul class="bullet-list">
+        <li>Heavy winter jacket & thermal inner wear</li><li>Gloves, woollen socks & monkey cap</li>
+        <li>Waterproof trekking boots</li><li>Sunglasses (UV protection)</li>
+        <li>Sunscreen SPF 50+ (high altitude burns)</li><li>Personal medicines & first-aid kit</li>
+        <li>Power bank & extra camera batteries (cold drains fast)</li>
+        <li>Rain cover for backpack & poncho</li><li>Govt. ID cards (mandatory in certain areas)</li>
+      </ul>`;
+    }
+    if(isBeach){
+      return `<div class="section-title"><i class="fas fa-backpack"></i> Packing List – Beach / Goa</div>
+      <ul class="bullet-list">
+        <li>Light cottons, shorts & flip-flops</li><li>Swimwear & beach cover-up</li>
+        <li>Sunscreen SPF 50+, after-sun lotion</li><li>Sunglasses & wide-brim hat</li>
+        <li>Waterproof bag / dry bag for the beach</li><li>Insect repellent</li>
+        <li>Camera / GoPro for water shots</li><li>Medications & basic first aid</li>
+      </ul>`;
+    }
+    return `<div class="section-title"><i class="fas fa-backpack"></i> General Travel Packing List</div>
+    <ul class="bullet-list">
+      <li>Valid ID proof & photocopies</li><li>Cash + card (ATM cards mostly work)</li>
+      <li>Medicines & basic first aid</li><li>Phone charger & power bank</li>
+      <li>Change of clothes for all weather</li><li>Toiletries & personal hygiene items</li>
+    </ul>`;
+  }
+
+  /* EMERGENCY */
+  if(q.includes('passport')||q.includes('lost')||q.includes('emergency')||q.includes('stolen')){
+    return `<div class="section-title" style="color:#e74c3c"><i class="fas fa-exclamation-triangle"></i> Emergency Travel Tips</div>
+    <div class="alert-card">
+      <div class="alert-title"><i class="fas fa-id-card"></i> If You Lose Your Passport</div>
+      <ol class="ol-list">
+        <li>Stay calm — go to the nearest police station</li>
+        <li>File an FIR immediately & get a copy</li>
+        <li>Contact your country's embassy / consulate</li>
+        <li>Apply for an Emergency Travel Certificate (ETC)</li>
+        <li>Inform your hotel & travel insurance company</li>
+      </ol>
+    </div>
+    <div style="margin-top:10px"><strong style="font-size:12px">Prevention Tips:</strong>
+    <ul class="bullet-list">
+      <li>Always carry digital copies of your passport</li>
+      <li>Store backup photos on Google Drive / email</li>
+      <li>Keep photocopies in a separate bag</li>
+    </ul></div>`;
+  }
+
+  /* FOOD */
+  if(q.includes('food')||q.includes('eat')||q.includes('cuisine')||q.includes('dish')){
+    const dest=detectDest(q);
+    if(dest&&DB[dest]){
+      const d=DB[dest];
+      const name=dest.charAt(0).toUpperCase()+dest.slice(1);
+      const foods=d.food;
+      if(!foods)return `I don't have a specific food guide for ${name} yet, but I can tell you about Goa, Manali, Kashmir, Jaipur, and Hyderabad food!`;
+      if(Array.isArray(foods)&&typeof foods[0]==='object'){
+        return `<div class="section-title"><i class="fas fa-utensils"></i> Famous Food in ${d.emoji} ${name}</div>
+        <div class="card-grid">${foods.map(f=>`<div class="mini-card"><div class="mc-title">${f.name}</div><div class="mc-sub">${f.desc}</div></div>`).join('')}</div>`;
+      }
+      return `<div class="section-title"><i class="fas fa-utensils"></i> Famous Food in ${d.emoji} ${name}</div>
+      <ul class="bullet-list">${foods.map(f=>`<li>${f}</li>`).join('')}</ul>`;
+    }
+  }
+
+  /* ATTRACTIONS */
+  if(q.includes('attract')||q.includes('places')||q.includes('sightseeing')||q.includes('visit')||q.includes('top')){
+    const dest=detectDest(q);
+    if(dest&&DB[dest]?.attractions){
+      const d=DB[dest];const name=dest.charAt(0).toUpperCase()+dest.slice(1);
+      return `<div class="section-title"><i class="fas fa-map-pin"></i> Top Attractions – ${d.emoji} ${name}</div>
+      <div class="card-grid">${d.attractions.map(a=>`<div class="mini-card"><div class="mc-title">${a.split(' – ')[0]}</div><div class="mc-sub">${a.split(' – ')[1]||''}</div></div>`).join('')}</div>`;
+    }
+  }
+
+  /* NEARBY */
+  if(q.includes('nearby')||q.includes('near')||q.includes('around')){
+    const dest=detectDest(q);
+    if(dest&&DB[dest]?.nearby){
+      const d=DB[dest];const name=dest.charAt(0).toUpperCase()+dest.slice(1);
+      return `<div class="section-title"><i class="fas fa-compass"></i> Places Near ${d.emoji} ${name}</div>
+      <ul class="bullet-list">${d.nearby.map(n=>`<li>${n}</li>`).join('')}</ul>`;
+    }
+  }
+
+  /* WHEN TO VISIT / BEST TIME */
+  if(q.includes('when')||q.includes('best time')||q.includes('season')){
+    const dest=detectDest(q);
+    if(dest==='kashmir'){
+      return `<div class="section-title"><i class="fas fa-calendar-check"></i> Best Time to Visit Kashmir 🌷</div>
+      <div class="card-grid">${DB.kashmir.seasons.map(s=>`<div class="mini-card"><div class="mc-title">${s.name} (${s.months})</div><div class="mc-sub">${s.desc}</div></div>`).join('')}</div>`;
+    }
+    if(dest&&DB[dest]){
+      const d=DB[dest];const name=dest.charAt(0).toUpperCase()+dest.slice(1);
+      return `<div class="section-title"><i class="fas fa-calendar-check"></i> Best Time to Visit ${d.emoji} ${name}</div>
+      <div class="mini-card">
+        <div class="mc-title">Recommended Season</div>
+        <div class="mc-sub" style="color:var(--blue);font-weight:600">${d.best_time}</div>
+        <div class="mc-sub" style="margin-top:6px">${d.weather}</div>
+      </div>`;
+    }
+  }
+
+  /* CATEGORY: BEACH */
+  if(q.includes('beach')){
+    return `<div class="section-title"><i class="fas fa-umbrella-beach"></i> Top Beach Destinations in India</div>
+    <div class="card-grid">
+      <div class="mini-card"><div class="mc-title">🏖️ Goa</div><div class="mc-sub">Baga, Palolem, Anjuna — party & serenity</div></div>
+      <div class="mini-card"><div class="mc-title">🌊 Andaman</div><div class="mc-sub">Radhanagar Beach, coral reefs, pristine water</div></div>
+      <div class="mini-card"><div class="mc-title">🌿 Gokarna</div><div class="mc-sub">Peaceful, offbeat — Om Beach & Kudle Beach</div></div>
+      <div class="mini-card"><div class="mc-title">🥐 Pondicherry</div><div class="mc-sub">French colonial charm + Promenade Beach</div></div>
+      <div class="mini-card" style="grid-column:span 2"><div class="mc-title">🌴 Varkala (Kerala)</div><div class="mc-sub">Stunning cliffside beaches + Ayurvedic retreats</div></div>
+    </div>`;
+  }
+
+  /* CATEGORY: SNOW */
+  if(q.includes('snow')||q.includes('skiing')||q.includes('ski')){
+    return `<div class="section-title"><i class="fas fa-snowflake"></i> Top Snow Destinations in India</div>
+    <div class="card-grid">
+      <div class="mini-card"><div class="mc-title">⛷️ Gulmarg</div><div class="mc-sub">Best ski resort, gondola ride, 3–4 m snow</div></div>
+      <div class="mini-card"><div class="mc-title">🏔️ Manali</div><div class="mc-sub">Solang Valley, Rohtang Pass, snow sports</div></div>
+      <div class="mini-card"><div class="mc-title">🎿 Auli</div><div class="mc-sub">Uttarakhand's skiing paradise, Himalayan views</div></div>
+      <div class="mini-card"><div class="mc-title">⛰️ Shimla</div><div class="mc-sub">Colonial hill station, snowfall in Jan–Feb</div></div>
+      <div class="mini-card" style="grid-column:span 2"><div class="mc-title">🌨️ Tawang (Arunachal)</div><div class="mc-sub">Remote, breathtaking, pristine snowscapes</div></div>
+    </div>`;
+  }
+
+  /* CATEGORY: SUMMER */
+  if(q.includes('summer')){
+    return `<div class="section-title"><i class="fas fa-sun"></i> Best Places to Visit in Summer</div>
+    <ul class="bullet-list">
+      <li>Manali – escape heat in the Himalayas (15–25°C)</li>
+      <li>Shimla – colonial charm at 2,200 m altitude</li>
+      <li>Ooty (Tamil Nadu) – Nilgiris hills & tea gardens</li>
+      <li>Munnar (Kerala) – lush green tea estates</li>
+      <li>Coorg (Karnataka) – coffee estates & waterfalls</li>
+      <li>Spiti Valley – high-altitude cold desert</li>
+    </ul>`;
+  }
+
+  /* CATEGORY: WINTER */
+  if(q.includes('winter')){
+    return `<div class="section-title"><i class="fas fa-snowflake"></i> Best Places in Winter</div>
+    <ul class="bullet-list">
+      <li>Gulmarg – snowfall & skiing (Dec–Feb)</li>
+      <li>Auli – Himalayan ski slopes, Uttarakhand</li>
+      <li>Goa – peak tourist season, perfect weather</li>
+      <li>Rajasthan – Jaipur, Udaipur, Jaisalmer desert</li>
+      <li>Andaman – clear skies, perfect for beaches & diving</li>
+    </ul>`;
+  }
+
+  /* DESTINATION OVERVIEW */
+  for(const [key,d] of Object.entries(DB)){
+    if(q.includes(key)){
+      const name=key.charAt(0).toUpperCase()+key.slice(1);
+      const foods=d.food?`<div style="margin-top:8px"><strong style="font-size:12px;color:var(--text-muted)">Famous Food</strong><br/>${(Array.isArray(d.food)?d.food.map(f=>typeof f==='object'?f.name:f):[]).map(f=>`<span class="badge badge-amber">${f}</span>`).join('')}</div>`:'';
+      const att=d.attractions?`<div style="margin-top:8px"><strong style="font-size:12px;color:var(--text-muted)">Top Attractions</strong><br/>${d.attractions.slice(0,4).map(a=>`<span class="badge badge-blue">${a.split(' – ')[0]}</span>`).join('')}</div>`:'';
+      return `<div class="section-title"><i class="fas fa-map-marked-alt"></i> ${d.emoji||''} ${name} Overview</div>
+      <p style="font-size:13.5px;line-height:1.65;margin-bottom:10px">${d.overview}</p>
+      <span class="badge badge-green"><i class="fas fa-calendar-check"></i> Best time: ${d.best_time||'Oct–Mar'}</span>
+      ${att}${foods}`;
+    }
+  }
+
+  /* GREET */
+  if(q.includes('hello')||q.includes('hi')||q.includes('hey')||q.includes('namaste')){
+    return `Namaste! 🙏 I'm TravelEase, your AI travel companion for India. I can help you with:<br/><br/>
+    🗺️ Destination guides · 💰 Budget estimates · 🗓️ Trip itineraries<br/>
+    🍛 Food guides · 🏨 Hotel recommendations · ❄️ Packing lists<br/><br/>
+    Where would you like to explore today?`;
+  }
+
+  return `I'd love to help you plan your trip! 😊 Try asking me about:<br/><br/>
+  • A specific destination (Goa, Manali, Kashmir, Jaipur, Hyderabad…)<br/>
+  • Budget for a trip<br/>
+  • Best time to visit a place<br/>
+  • Top attractions or food guide<br/>
+  • Visa requirements for a country<br/><br/>
+  <em>Tip: Use the quick chips below or click a category in the sidebar!</em>`;
+}
+
+function detectDest(q){
+  const dests=Object.keys(DB);
+  for(const d of dests){if(q.includes(d))return d;}
+  return null;
+}
+
+/* ─── SEND ─── */
+function handleSend(){
+  const v=document.getElementById('inp').value.trim();
+  if(!v)return;
+  if(quizState!==null){handleQuizInput(v);return;}
+  addMsg(v,true);
+  document.getElementById('inp').value='';
+  showTyping();
+  setTimeout(()=>{removeTyping();addMsg(getReply(v));},700+Math.random()*400);
+}
+
+function sendChip(text){
+  if(quizState!==null){quizState=null;}
+  addMsg(text,true);showTyping();
+  setTimeout(()=>{removeTyping();addMsg(getReply(text));},700+Math.random()*300);
+}
+
+document.getElementById('inp').addEventListener('keydown',e=>{if(e.key==='Enter')handleSend();});
+
+/* ─── QUIZ ─── */
+function startQuiz(){
+  quizState={step:0,answers:{}};
+  addMsg('Sure! Let me ask you a few quick questions to find your perfect destination. 🎯',false);
+  setTimeout(()=>showQuizQuestion(),400);
+}
+
+function showQuizQuestion(){
+  const step=quizFlow[quizState.step];
+  const html=`<div class="quiz-card">
+    <div class="quiz-q">Q${quizState.step+1}/4: ${step.q}</div>
+    <div class="quiz-opts">${step.opts.map(o=>`<button class="quiz-opt" onclick="pickQuizOpt(this,'${o}')">${o}</button>`).join('')}</div>
+  </div>`;
+  addMsg(html,false);
+}
+
+function pickQuizOpt(btn,val){
+  document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);
+  btn.classList.add('selected');
+  quizState.answers[quizFlow[quizState.step].key]=val;
+  quizState.step++;
+  if(quizState.step<quizFlow.length){setTimeout(()=>showQuizQuestion(),500);}
+  else{setTimeout(()=>showQuizResult(),600);}
+}
+
+function handleQuizInput(v){quizState=null;addMsg(v,true);showTyping();setTimeout(()=>{removeTyping();addMsg(getReply(v));},700);}
+
+function showQuizResult(){
+  const a=quizState.answers;quizState=null;
+  let dest='Goa',reason='A perfect blend of beaches, budget-friendliness, and vibrant culture.';
+  if(a.type==='Mountains'){dest='Manali';reason='Himalayan mountains, adventure sports & scenic valleys match your preferences.';}
+  else if(a.type==='Heritage / Culture'){dest='Jaipur';reason='The Pink City\'s rich Rajput heritage, forts & cuisine suits a cultural traveller.';}
+  else if(a.type==='Wildlife'){dest='Ranthambore';reason='Jim Corbett or Ranthambore Tiger Reserve for wildlife enthusiasts!';}
+  if(a.budget==='Luxury (₹30K+)'&&a.type==='Beaches'){dest='Andaman';reason='Pristine luxury beach experience with crystal waters & coral reefs.';}
+  if(a.mood==='Romantic'){dest='Udaipur';reason='The City of Lakes — romance, palaces & candle-lit lake dinners await.';}
+  addMsg(`<div class="dest-result-card">
+    <div style="font-size:12px;opacity:.8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">🎯 Your Perfect Destination</div>
+    <div class="dest-name">${dest.toUpperCase()}</div>
+    <div class="dest-reason">${reason}</div>
+    <button class="quick-btn" style="margin-top:12px;font-size:12px" onclick="sendChip('Tell me about ${dest}')">Tell me more about ${dest} →</button>
+  </div>`,false);
+}
+
+/* ─── CLEAR ─── */
+function clearChat(){
+  document.getElementById('messages').innerHTML='';quizState=null;
+  showWelcome();
+}
+
+/* ─── SIDEBAR ─── */
+function sbClick(el,prompt){
+  document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');closeSidebar();sendChip(prompt);
+}
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.remove('hidden');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.add('hidden');}
+
+/* ─── WELCOME ─── */
+function showWelcome(){
+  const html=`<div class="welcome-banner">
+    <div class="welcome-title">✈️ Welcome to TravelEase!</div>
+    <div class="welcome-sub">Your intelligent AI travel companion for incredible India. Ask me about destinations, budgets, itineraries, food, hotels, visas, packing tips, and more.</div>
+    <div class="quick-btns">
+      <button class="quick-btn" onclick="sendChip('Tell me about Goa')">🏖️ Goa</button>
+      <button class="quick-btn" onclick="sendChip('Tell me about Manali')">🏔️ Manali</button>
+      <button class="quick-btn" onclick="sendChip('Tell me about Kashmir')">🌷 Kashmir</button>
+      <button class="quick-btn" onclick="sendChip('Tell me about Jaipur')">🏰 Jaipur</button>
+      <button class="quick-btn" onclick="startQuiz()">🎯 Take Travel Quiz</button>
+    </div>
+  </div>`;
+  addMsg(html,false);
+}
+
+showWelcome();
+</script>
+</body>
+</html>
