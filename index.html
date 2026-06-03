@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translify</title>
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:'Segoe UI', sans-serif;
+        }
+
+        body{
+
+            height:100vh;
+
+            display:flex;
+            justify-content:center;
+            align-items:flex-start;
+
+            padding-top:40px;
+
+            background:
+            linear-gradient(
+                135deg,
+                #f7f3ed,
+                #ebe2d3
+            );
+        }
+
+        .container{
+
+            width:460px;
+
+            background:#fffdf9;
+
+            padding:35px;
+
+            border-radius:24px;
+
+            border:1px solid #e5dac9;
+
+            box-shadow:
+            0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        h1{
+
+            text-align:center;
+
+            color:#5d4b3c;
+
+            margin-bottom:30px;
+
+            font-size:34px;
+
+            letter-spacing:1px;
+        }
+
+        .label{
+
+            color:#7a6857;
+
+            margin-bottom:10px;
+
+            font-size:15px;
+
+            font-weight:600;
+        }
+
+        textarea{
+
+            width:100%;
+            height:140px;
+
+            border:none;
+
+            outline:none;
+
+            resize:none;
+
+            padding:18px;
+
+            border-radius:18px;
+
+            background:#f8f4ee;
+
+            color:#4a4037;
+
+            font-size:16px;
+
+            line-height:1.6;
+
+            border:1px solid #e1d7c9;
+
+            transition:0.3s;
+        }
+
+        textarea:focus{
+
+            border-color:#b69b7a;
+
+            box-shadow:
+            0 0 10px rgba(182,155,122,0.25);
+        }
+
+        .counter{
+
+            text-align:right;
+
+            margin-top:8px;
+
+            color:#8a7b6a;
+
+            font-size:14px;
+        }
+
+        .dropdowns{
+
+            display:flex;
+
+            align-items:center;
+
+            gap:12px;
+
+            margin-top:25px;
+        }
+
+        .select-box{
+
+            flex:1;
+        }
+
+        select{
+
+            width:100%;
+
+            padding:14px;
+
+            border-radius:14px;
+
+            border:1px solid #ddd0bf;
+
+            background:#f8f4ee;
+
+            color:#5b4c3d;
+
+            font-size:15px;
+
+            outline:none;
+
+            cursor:pointer;
+        }
+
+        .swap{
+
+            width:52px;
+            height:52px;
+
+            border-radius:50%;
+
+            border:none;
+
+            background:#8b7355;
+
+            color:white;
+
+            cursor:pointer;
+
+            transition:0.3s;
+
+            font-size:18px;
+        }
+
+        .swap:hover{
+
+            transform:rotate(180deg);
+
+            background:#6f5a42;
+        }
+
+        .translate-btn{
+
+            width:100%;
+
+            margin-top:28px;
+
+            padding:16px;
+
+            border:none;
+
+            border-radius:16px;
+
+            background:
+            linear-gradient(
+                135deg,
+                #9b8061,
+                #7d654b
+            );
+
+            color:white;
+
+            font-size:17px;
+
+            font-weight:600;
+
+            cursor:pointer;
+
+            transition:0.3s;
+        }
+
+        .translate-btn:hover{
+
+            transform:translateY(-2px);
+
+            opacity:0.95;
+        }
+
+        .result-box{
+
+            margin-top:28px;
+
+            background:#f8f4ee;
+
+            border-radius:18px;
+
+            padding:20px;
+
+            border:1px solid #e1d7c9;
+        }
+
+        .result-title{
+
+            color:#7b6855;
+
+            margin-bottom:12px;
+
+            font-size:15px;
+
+            font-weight:600;
+        }
+
+        #result{
+
+            min-height:60px;
+
+            color:#4b4035;
+
+            line-height:1.7;
+
+            font-size:17px;
+        }
+
+        .buttons{
+
+            display:flex;
+
+            gap:14px;
+
+            margin-top:22px;
+        }
+
+        .small-btn{
+
+            flex:1;
+
+            padding:14px;
+
+            border:none;
+
+            border-radius:14px;
+
+            background:#efe6d9;
+
+            color:#5f4f40;
+
+            font-size:15px;
+
+            cursor:pointer;
+
+            transition:0.3s;
+
+            font-weight:600;
+        }
+
+        .small-btn:hover{
+
+            background:#dbcab2;
+        }
+
+        .history{
+
+            margin-top:30px;
+        }
+
+        .history h3{
+
+            color:#6a5848;
+
+            margin-bottom:15px;
+
+            font-size:18px;
+        }
+
+        .history-item{
+
+            background:#f8f4ee;
+
+            padding:14px;
+
+            border-radius:14px;
+
+            margin-bottom:10px;
+
+            border:1px solid #e6dacb;
+
+            color:#5b4c3d;
+
+            font-size:14px;
+        }
+
+        @media(max-width:500px){
+
+            .container{
+
+                width:92%;
+
+                padding:25px;
+            }
+
+            h1{
+
+                font-size:28px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+  
+<div class="container">
+
+    <h1>Translify : Language Translator</h1>
+
+    <div class="label">
+        Enter Text
+    </div>
+
+    <textarea
+        id="text"
+        placeholder="Type something to translate..."></textarea>
+
+    <div class="counter" id="counter">
+        0 / 500
+    </div>
+
+    <div class="dropdowns">
+
+        <div class="select-box">
+            <select id="fromLang">
+
+                <option value="en">English 🇺🇸</option>
+                <option value="hi">Hindi 🇮🇳</option>
+                <option value="ta">Tamil 🇮🇳</option>
+                <option value="es">Spanish 🇪🇸</option>
+                <option value="de">German 🇩🇪</option>
+
+            </select>
+        </div>
+
+        <button class="swap" id="swapBtn">
+            <i class="fa-solid fa-right-left"></i>
+        </button>
+
+        <div class="select-box">
+            <select id="toLang">
+
+               <option value="en">English 🇺🇸</option>
+                <option value="hi">Hindi 🇮🇳</option>
+                <option value="ta">Tamil 🇮🇳</option>
+                <option value="es">Spanish 🇪🇸</option>
+                <option value="de">German 🇩🇪</option>
+
+            </select>
+        </div>
+
+    </div>
+
+    <button class="translate-btn" id="translateBtn">
+        Translate Text
+    </button>
+
+    <div class="result-box">
+
+        <div class="result-title">
+            Translation
+        </div>
+
+        <div id="result">
+            Your translated text will appear here...
+        </div>
+
+    </div>
+
+    <div class="buttons">
+
+        <button class="small-btn" id="copyBtn">
+            <i class="fa-regular fa-copy"></i>
+            Copy
+        </button>
+
+        <button class="small-btn" id="speakBtn">
+            <i class="fa-solid fa-volume-high"></i>
+            Speak
+        </button>
+
+        <button class="small-btn" id="downloadBtn">
+            <i class="fa-solid fa-download"></i>
+            Download
+        </button>
+
+    </div>
+
+    <div class="history">
+
+        <h3>Recent Translations</h3>
+
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
